@@ -1,0 +1,3 @@
+total 8
+drwx------ 21 alex alex  4096 May 24 23:22 alex
+drwx------ 15 1000 wheel 4096 Apr  5 03:07 nadie
