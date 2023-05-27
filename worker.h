@@ -21,14 +21,13 @@ void *worker_f(void* wk)
      Message* msg =pop(((Worker*)wk)->receptor);
     pthread_mutex_unlock(&mymutex);
      if(msg!=NULL){
-    printf("mensaje recibido en %d\n",((Worker*)wk)->worker_id);
       if(msg->job!=NULL){
-       msg->job(NULL);
+       msg->job(&msg->param);
       }
       finish=msg->finish;
       free(msg);
      }
    }
-  printf("\n terminando hilo %d\n",((Worker*)wk)->worker_id);
+  printf("\n matando hilo %d\n",((Worker*)wk)->worker_id);
 }
 #endif

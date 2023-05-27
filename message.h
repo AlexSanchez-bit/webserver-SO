@@ -9,6 +9,7 @@ typedef struct message
 {
   bool finish;
   func* job;  
+  int param;
 } Message;
 
 #endif

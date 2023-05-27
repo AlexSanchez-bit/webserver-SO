@@ -1,64 +1,52 @@
-#include "generate.h"
 #include "header.h"
-#include "getroute.h"
+#include "server.h"
 #include "thread_pool.h"
-#include <pthread.h>
-#include <unistd.h>
+#include "getroute.h"
+
+#define PORT 8080  //puerto de la conexion
+#define SERV_ADRR "127.0.0.1" //ip
 
 
-void *hola()
+void *response(void* param)
 {
-  printf("hola mundo\n");
-        fflush ( stdout ) ;
-        printf("finish primer hilo");
-}
+  int clientfd =*((int*)param);
+  
+  char* content = get_info("/home");
+  char* resp;
+  if(content!=NULL)
+  {
+   resp=generate_response(content,200); 
+  }else{
+    resp=generate_response(read_file("./error_page.html"),404);
+  }
 
-void *aux()
-{
-  printf("holiii\n");
-  while(1){}
+ if(write(clientfd,resp,strlen(resp))<0)
+ {
+    printf("error enviando respuesta\n");
+ }
+  close(clientfd);
 }
-
 
 int main()
 {
-  ThreadPool* tp = create(4);
-  init(tp);
-  send_job(tp,hola);
-  send_job(tp,hola);
-  send_job(tp,hola);
-  send_job(tp,hola);
-  send_job(tp,aux);
-  finish(tp); 
 
+  ThreadPool* tp = create(3);
+
+  init(tp);
+
+  int socket = create_conection(SERV_ADRR,PORT);
+  
+  if(socket<0)
+  {
+    printf("error al abrir el servidor\n");
+  }
+
+  while(1){
+  int client_fd = wait_client(socket);  
+  send_job(tp,response,client_fd);
+  }
+  finish(tp);
+  close(socket);  
   return 0;
 }
 
-/*
- *
-  char* directory ="/dev/fb0";
-  char** name=malloc(sizeof(char*)*3);
-  char** route=malloc(sizeof(char*)*3);
-  char** date=malloc(sizeof(char*)*3);
-  char** size=malloc(sizeof(char*)*3);
-
-  *(name)="alex";
-  *(name+1)="christian";
-  *(name+2)="barbaro";
-
-  *(size)="4";
-  *(size+1)="12";
-  *(size+2)="43";
-
-  *(date)="5/5/2001";
-  *(date+1)="9/9/2019";
-  *(date+2)="1/8/2018";
-
-  *(route)="/etc/rpc";
-  *(route+1)="/opt/yay";
-  *(route+2)="/home/alex/pokemon";
-
-  char* a =generate_file(directory,name,route,size,date,3);
-
-  printf("%s\n",dirname());
- * */

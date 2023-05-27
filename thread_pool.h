@@ -40,9 +40,9 @@ void init(ThreadPool* tp)
   }
 }
 
-void send_job(ThreadPool* tp , func* job)
+void send_job(ThreadPool* tp , func* job,int param)
 {
-    Message a = {false,job};
+    Message a = {false,job,param};
     Message* pointer = malloc(sizeof(Message));
     *pointer=a;
     pthread_mutex_lock(&mymutex);
@@ -53,7 +53,7 @@ void send_job(ThreadPool* tp , func* job)
 void finish(ThreadPool* tp)
 {
   
-    Message a = {true,NULL};
+    Message a = {true,NULL,0};
   for(int i=0;i<tp->cant_workers+1;i++)
   {
     Message* pointer = malloc(sizeof(Message));

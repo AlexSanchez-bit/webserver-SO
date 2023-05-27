@@ -49,7 +49,7 @@ char* generate_file(char* directorio,char** name,char** route,char** size,char**
       *(*(elements+i)+3)=tp4;
     }
 
-    char* content_text = generate_content(elements,3);
+    char* content_text = generate_content(elements,cantidad);
 
     Tuple content = new_t("content",content_text);
     *(list+1)=content;
