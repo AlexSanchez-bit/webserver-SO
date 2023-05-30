@@ -19,16 +19,6 @@ void init_files_mutex()
      pthread_mutex_init(&filemutex,NULL);
 }
 
-Tuple new_t(char* k,char* v)
-{
- char *key,*value;
-
- key = malloc(strlen(k));
- value = malloc(strlen(v));
- strcpy(key,k);
- strcpy(value,v);
- return (Tuple){key,value};
-}
 
 char* concat(char* original,char* nuevo);
 char* generate_content(Tuple** elementos,int cantidad);
@@ -71,34 +61,7 @@ char* fill_content(char* template_name,Tuple* key_value_pairs,int tuple_size)
      printf("archivo no encontrado\n");
      return NULL;
    }
-
-   char* token = strtok(file,"$");
-   char* result=malloc(1);   
-   memset(result,0,1);
-   int oldsize=1;
-   while(token!=NULL)
-   { 
-    for(int i=0;i<tuple_size;i++)
-    {
-     char* key =(key_value_pairs+i)->key;
-     if(!strcmp(token,key))
-     {
-      token=malloc(strlen((key_value_pairs+i)->value));
-      strcpy(token,(key_value_pairs+i)->value);
-      free((key_value_pairs+i)->value);
-       break;
-     }
-    }
-
-     oldsize=strlen(token)+oldsize;   
-     result=realloc(result,oldsize);
-     strcat(result,token);
-     token = strtok(NULL,"$");
-     
-   }
-   free(file);
-  return result;
-  
+    return file;
 }
 
 

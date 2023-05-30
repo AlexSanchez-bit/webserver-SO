@@ -11,7 +11,6 @@
 void *response(void* param)
 {
   int clientfd =*((int*)param);
-  printf("llego el fd %d\n",clientfd);
 
   char buff[200];
   memset(buff,0,200);
@@ -26,20 +25,33 @@ void *response(void* param)
     }
     if(strncmp("GET",buff,3)==0)
     {
-      char* petition = malloc(1);
+      char* petition=malloc(120);
+      memset(petition,'\0',120);
       *petition=buff[4];
       int cant=1;
-      while(cant<size && buff[cant+4]!='H')
-      {
-        petition=realloc(petition,cant+1);
-        if(buff[cant+4]=='%')
+      int actual=5;
+      while(cant<size && buff[actual]!='H')
+      {      
+        if(buff[actual]=='%')
         {
-          buff[cant+4]='\\';
-          buff[cant+5]='/';
+        *(petition+cant)=' ';
+          actual+=3;
+          cant++;
+          continue;
         }
-        *(petition+cant)=buff[cant+4];
+        *(petition+cant)=buff[actual];
         cant++;
-      }
+        actual++;
+      }      
+      if(strncmp(petition,"/static",7)==0)
+      {
+        def=0;
+      route=malloc(strlen(petition)+1);
+      memset(route,0,strlen(petition));
+      strcat(route,dirname());
+      strncat(route,petition,strlen(petition)-1);
+      strcat(route,"\0");
+      }else
       if(strncmp(petition,"/ ",2)!=0){
         def=0;
       route=malloc(strlen(petition));
@@ -50,12 +62,11 @@ void *response(void* param)
       free(petition);
     }
     memset(buff,0,200);
-  }
-
+  }    
   char* content;
   if(def)
   {
-  content = get_info(__dirname,clientfd);
+    content = get_info(__dirname,clientfd);
   }else{
    content = get_info(route,clientfd);
    free(route);
@@ -71,9 +82,23 @@ void *response(void* param)
 
 
 
+
+
 int main(int argc,char** args)
 {
-  __dirname=dirname();
+   
+  for(int i=0;i<argc;i++)
+  {
+    printf("%s\n",*(args+i));
+  }
+   if(argc == 1){
+    __dirname="/home";
+   }else
+   {
+    __dirname=*(args+1);
+   }
+
+
   init_files_mutex();
 
   ThreadPool* tp = create(4);

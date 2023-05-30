@@ -9,6 +9,8 @@
 #include "generate.h"
 
 char* size_to_str(int bytes);
+int is_file(char* route_tofile);
+int send_file(char* route_tofile,int);
 char* __dirname;
 
 
@@ -23,12 +25,18 @@ char* dirname()
 
 char* get_info(char* route,int clientfd)
 {         
+
+
         printf("%s\n",route);
         DIR* dir = opendir(route);
         struct stat buff;
   char* header="HTTP/1.1 %d OK\r\n\r\n %s \r\n\r\n";
         if(!dir)
         {
+          if(send_file(route,clientfd)>0)
+          {
+            return NULL;
+          }
           char * file = fill_content("./error_page.html",NULL,0);
           int size=strlen(header)+strlen(file)+3;
           char * resp=malloc(size);
@@ -84,10 +92,10 @@ char* get_info(char* route,int clientfd)
 
               write(clientfd,tmp_,strlen(tmp_));
               
-             free(tmp);
-             free(tmp_);
-             free(date);
-             free(size);
+            // free(tmp);
+            // free(tmp_);
+             //free(date);
+             //free(size);
              free(direction);
             }
             ent=readdir(dir);
@@ -98,6 +106,36 @@ char* get_info(char* route,int clientfd)
           free(dir);
 
         return ret;
+}
+
+
+int is_file(char* route_tofile)
+{
+  int file = open(route_tofile,O_RDONLY);
+  close(file);
+  return file;
+}
+
+int send_file(char* route_tofile,int cfd)
+{
+  int file = open(route_tofile,O_RDONLY);
+  if(file==-1)
+  {
+    return -1;
+  }
+  char* header="HTTP/1.1 200  \r\n\r\n  \r\n\r\n";// HTTP/1.1 200 OK\r\n\r\n ";
+  write(cfd,header,strlen(header));
+  char buff[1024];
+  memset(buff,0,1024);
+  int size=0;
+
+  while((size=read(file,&buff,1024))>0)
+  {
+  write(cfd,&buff,size);
+    memset(buff,0,1024);
+  }
+  close(file);
+  return file;
 }
 
 
