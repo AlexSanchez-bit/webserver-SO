@@ -3,6 +3,8 @@
 #include "worker.h"
 #include "message.h"
 
+
+//el thread pool permite ejecutar en paralelo las operaciones
 typedef struct tp 
 {
   Worker* workers;
@@ -13,19 +15,19 @@ typedef struct tp
 
 ThreadPool* create(int cant)
 {
-     Queue* cola = new_empty();
-     pthread_mutex_init(&mymutex,NULL);
+     Queue* cola = new_empty();//crea la cola
+     pthread_mutex_init(&mymutex,NULL);//mutex para la cola
 
-     Worker* worker_list =malloc(sizeof(Worker)*cant);
+     Worker* worker_list =malloc(sizeof(Worker)*cant);//lista de workers
 
-     pthread_t* threads = malloc(sizeof(pthread_t)*cant);
+     pthread_t* threads = malloc(sizeof(pthread_t)*cant);//lista de hilos
 
      for(int i=0;i<cant;i++)
      {
-        *(worker_list+i)=(Worker){i+1,cola};      
+        *(worker_list+i)=(Worker){i+1,cola}; //inicializa los workers     
   }
 
-     ThreadPool tp = {worker_list,cant,threads,cola};
+     ThreadPool tp = {worker_list,cant,threads,cola};//crea el thread pool
 
      ThreadPool* ret_val= malloc(sizeof(ThreadPool));
      *ret_val = tp;
@@ -36,11 +38,11 @@ void init(ThreadPool* tp)
 {
   for(int i=0;i<tp->cant_workers;i++)
   {
-    pthread_create ((tp->threads+i) , NULL , worker_f , (tp->workers+i) );
+    pthread_create ((tp->threads+i) , NULL , worker_f , (tp->workers+i) );//inicializa los hilos con los workers
   }
 }
 
-void send_job(ThreadPool* tp , func* job,int param)
+void send_job(ThreadPool* tp , func* job,int param)//envia un mensaje a los workers
 {
     Message a = {false,job,param};
     Message* pointer = malloc(sizeof(Message));
@@ -50,7 +52,7 @@ void send_job(ThreadPool* tp , func* job,int param)
     pthread_mutex_unlock(&mymutex);
 }
 
-void finish(ThreadPool* tp)
+void finish(ThreadPool* tp)//termina el thread pool
 {
   
     Message a = {true,NULL,0};

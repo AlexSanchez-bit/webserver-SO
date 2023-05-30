@@ -8,42 +8,46 @@
 
 
 
-void *response(void* param)
+void *response(void* param) //metodo para responder las peticiones
 {
-  int clientfd =*((int*)param);
+  int clientfd =*((int*)param);//file descriptor del usuario
 
-  char buff[200];
-  memset(buff,0,200);
-  char* route;
-  int def=1;
+  char buff[200];//buffer de lectura / escritura
+  memset(buff,0,200);//limpia el buffer
+  char* route;// variable para la ruta 
+  int def=1;//para saber si es el home (/) u otra ruta la pedida
 
   int size=0;
-  while((size=read(clientfd,&buff,200))>0){
-    if(buff[size-1]=='\n')
+  while((size=read(clientfd,&buff,200))>0){//lee todo el pedido http
+    if(buff[size-1]=='\n')//si encuentra el salto de linea es q ya se leyo hasta el final
     {
       break;
     }
-    if(strncmp("GET",buff,3)==0)
+    if(strncmp("GET",buff,3)==0)//si hay un get significa que se pidio data al server
     {
-      char* petition=malloc(120);
-      memset(petition,'\0',120);
-      *petition=buff[4];
-      int cant=1;
-      int actual=5;
-      while(cant<size && buff[actual]!='H')
+      char* petition=malloc(120);//variable para guardar la peticion
+      memset(petition,'\0',120);//limpio la variable
+      *petition=buff[4];//le guardo la pos 4 (las e primeras son GET)
+      int cant=1;//cantidad de char leidos
+      int actual=5;//posicion actual en el buffer
+      while(cant<size && buff[actual]!='H') //en los pedidos http
+                                            //desde Get a HTTP va la ruta que se pide 
+                                            //ejemplo GET / HTTP 1.1 ...
       {      
-        if(buff[actual]=='%')
+        if(buff[actual]=='%')//si encuentra esto es que habia un espacio y en el buffer
+                             //se escriben %20 por eso me salto 3 posiciones
         {
         *(petition+cant)=' ';
           actual+=3;
           cant++;
           continue;
         }
-        *(petition+cant)=buff[actual];
+        *(petition+cant)=buff[actual];//guardo el caracter 
         cant++;
         actual++;
       }      
-      if(strncmp(petition,"/static",7)==0)
+      if(strncmp(petition,"/static",7)==0)// si se pide de static es el css/js por
+                                          // tanto lo busco en la ruta del server
       {
         def=0;
       route=malloc(strlen(petition)+1);
@@ -52,7 +56,7 @@ void *response(void* param)
       strncat(route,petition,strlen(petition)-1);
       strcat(route,"\0");
       }else
-      if(strncmp(petition,"/ ",2)!=0){
+      if(strncmp(petition,"/ ",2)!=0){// si no es / entonces no es el home
         def=0;
       route=malloc(strlen(petition));
       memset(route,0,strlen(petition));
@@ -64,19 +68,18 @@ void *response(void* param)
     memset(buff,0,200);
   }    
   char* content;
-  if(def)
+  if(def)//si se hizo GET / entonces devuelvo la ruta por defecto
   {
     content = get_info(__dirname,clientfd);
-  }else{
+  }else{// caso contrario la que me piden
    content = get_info(route,clientfd);
-   free(route);
+   free(route);//limpiar memoria
   }
-  char* resp;
   if(size<0)
   {
     printf("error leyendo del cliente\n");
   }
-  close(clientfd);
+  close(clientfd);//cierro la conexion con el cliente
 }
 
 
@@ -87,25 +90,21 @@ void *response(void* param)
 int main(int argc,char** args)
 {
    
-  for(int i=0;i<argc;i++)
-  {
-    printf("%s\n",*(args+i));
-  }
-   if(argc == 1){
-    __dirname="/home";
+   if(argc == 1){// si argc es 1 no pasaron ruta
+    __dirname="/home";//pongo una por defecto
    }else
    {
-    __dirname=*(args+1);
+    __dirname=*(args+1);//caso contrario asigno la ruta default
    }
 
 
-  init_files_mutex();
+  init_files_mutex();//crea un mutex (para que no de bateo los hilos)
 
-  ThreadPool* tp = create(4);
+  ThreadPool* tp = create(4);//crea un thread pool con 4 hilos
 
-  init(tp);
+  init(tp);//inicializa el thread pool
 
-  int socket = create_conection(SERV_ADRR,PORT);
+  int socket = create_conection(SERV_ADRR,PORT);//crea la conexion
   
   if(socket<0)
   {
@@ -113,11 +112,11 @@ int main(int argc,char** args)
   }
 
   while(1){
-  int client_fd = wait_client(socket);  
-  send_job(tp,response,client_fd);
+  int client_fd = wait_client(socket);  //forever espera a q un usuario haga un request
+  send_job(tp,response,client_fd);//manda a responder al thread pool
   }
-  finish(tp);
-  close(socket);  
+  finish(tp);//limpia el thread pool
+  close(socket);//cierra la conexion  
   return 0;
 }
 

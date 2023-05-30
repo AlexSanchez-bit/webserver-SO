@@ -8,6 +8,8 @@
 
 pthread_mutex_t filemutex;
 
+//esto al final ni lo use
+
 typedef struct tuple
 {
  char* key;
