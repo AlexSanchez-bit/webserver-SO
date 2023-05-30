@@ -109,6 +109,9 @@ int main(int argc,char** args)
   if(socket<0)
   {
     printf("error al abrir el servidor\n");
+  }else{
+
+    printf(" servidor escuchando en %s:%d\n",SERV_ADRR,PORT);
   }
 
   while(1){
