@@ -3,7 +3,10 @@
 #define GENHTML_H
 #include "header.h"
 #include<string.h>
+#include <pthread.h>
 
+
+pthread_mutex_t filemutex;
 
 typedef struct tuple
 {
@@ -11,9 +14,20 @@ typedef struct tuple
  char* value;
 } Tuple;
 
+void init_files_mutex()
+{
+     pthread_mutex_init(&filemutex,NULL);
+}
+
 Tuple new_t(char* k,char* v)
 {
-   return (Tuple){k,v};
+ char *key,*value;
+
+ key = malloc(strlen(k));
+ value = malloc(strlen(v));
+ strcpy(key,k);
+ strcpy(value,v);
+ return (Tuple){key,value};
 }
 
 char* concat(char* original,char* nuevo);
@@ -22,44 +36,10 @@ char* fill_content(char* template_name,Tuple* key_value_pairs,int);
 
 
 
-char* generate_file(char* directorio,char** name,char** route,char** size,char** date,int cantidad)
-{
-   Tuple tupla = new_t("directory_name",directorio);
-
-   Tuple* list = malloc(sizeof(Tuple)*2);
-    list=&tupla;
-
-    Tuple** elements=malloc(sizeof(Tuple*)*cantidad);
-
-    for(int i=0;i<cantidad;i++){
-      *(elements+i)=malloc(sizeof(Tuple)*4);
-    }
-
-
-    for(int i=0;i<cantidad;i++)
-    {
-   Tuple tp1 = new_t("Route",*(route+i));
-   Tuple tp2 = new_t("Name",*(name+i));
-   Tuple tp3 = new_t("Size",*(size+i));
-   Tuple tp4 = new_t("Date",*(date+i));
-
-      *(*(elements+i))=tp1;
-      *(*(elements+i)+1)=tp2;
-      *(*(elements+i)+2)=tp3;
-      *(*(elements+i)+3)=tp4;
-    }
-
-    char* content_text = generate_content(elements,cantidad);
-
-    Tuple content = new_t("content",content_text);
-    *(list+1)=content;
-
-
-    return fill_content("./plantilla.html",list,2);
-}
 
 char* read_file(char* direction)
 {
+  pthread_mutex_lock(&filemutex);
    int file=open(direction,O_RDONLY); //abro el archivo en modo lectura 
     if (file==-1)
     {
@@ -67,18 +47,15 @@ char* read_file(char* direction)
       return NULL;
     }
 
-    char buffer[1024];
-    for(int i =0;i<1024;i++)
-    {
-     buffer[i]='\0';
-    }
+    char buffer[200];
+    memset(buffer,0,200);
 
-    read(file,&buffer,1024);
-
+    int readed = read(file,&buffer,200);
     close(file);
+    pthread_mutex_unlock(&filemutex);
 
-    char* ret_val = malloc(strlen(&buffer[0]));
-    ret_val=strcpy(ret_val,&buffer[0]);       
+    char* ret_val = malloc(readed);
+    ret_val=strcpy(ret_val,buffer);       
 
 
     return ret_val;
@@ -89,7 +66,6 @@ char* read_file(char* direction)
 char* fill_content(char* template_name,Tuple* key_value_pairs,int tuple_size)
 {
    char* file = read_file(template_name);
-
    if(file==NULL)
    {
      printf("archivo no encontrado\n");
@@ -97,7 +73,9 @@ char* fill_content(char* template_name,Tuple* key_value_pairs,int tuple_size)
    }
 
    char* token = strtok(file,"$");
-   char* result="";
+   char* result=malloc(1);   
+   memset(result,0,1);
+   int oldsize=1;
    while(token!=NULL)
    { 
     for(int i=0;i<tuple_size;i++)
@@ -105,12 +83,20 @@ char* fill_content(char* template_name,Tuple* key_value_pairs,int tuple_size)
      char* key =(key_value_pairs+i)->key;
      if(!strcmp(token,key))
      {
-       token=(key_value_pairs+i)->value;
+      token=malloc(strlen((key_value_pairs+i)->value));
+      strcpy(token,(key_value_pairs+i)->value);
+      free((key_value_pairs+i)->value);
+       break;
      }
     }
-   result=concat(result,token);
-   token = strtok(NULL,"$");
+
+     oldsize=strlen(token)+oldsize;   
+     result=realloc(result,oldsize);
+     strcat(result,token);
+     token = strtok(NULL,"$");
+     
    }
+   free(file);
   return result;
   
 }
@@ -121,8 +107,10 @@ char* fill_content(char* template_name,Tuple* key_value_pairs,int tuple_size)
 
 char* concat(char* original,char* nuevo)
 {
- char* new_value=malloc(strlen(original)+strlen(nuevo));
-  *new_value='\0';
+ int size =strlen(original)+strlen(nuevo);
+ printf("left: %s right: %s newsize %d\n",original,nuevo,size);
+ char* new_value=malloc(size);
+ memset(new_value,0,size);
   new_value = strcat(new_value,original);
   new_value = strcat(new_value,nuevo);  
   return new_value;

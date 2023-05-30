@@ -7,30 +7,76 @@
 #define SERV_ADRR "127.0.0.1" //ip
 
 
+
 void *response(void* param)
 {
   int clientfd =*((int*)param);
-  
-  char* content = get_info("/home");
-  char* resp;
-  if(content!=NULL)
-  {
-   resp=generate_response(content,200); 
-  }else{
-    resp=generate_response(read_file("./error_page.html"),404);
+  printf("llego el fd %d\n",clientfd);
+
+  char buff[200];
+  memset(buff,0,200);
+  char* route;
+  int def=1;
+
+  int size=0;
+  while((size=read(clientfd,&buff,200))>0){
+    if(buff[size-1]=='\n')
+    {
+      break;
+    }
+    if(strncmp("GET",buff,3)==0)
+    {
+      char* petition = malloc(1);
+      *petition=buff[4];
+      int cant=1;
+      while(cant<size && buff[cant+4]!='H')
+      {
+        petition=realloc(petition,cant+1);
+        if(buff[cant+4]=='%')
+        {
+          buff[cant+4]='\\';
+          buff[cant+5]='/';
+        }
+        *(petition+cant)=buff[cant+4];
+        cant++;
+      }
+      if(strncmp(petition,"/ ",2)!=0){
+        def=0;
+      route=malloc(strlen(petition));
+      memset(route,0,strlen(petition));
+      strncpy(route,petition,strlen(petition)-1);
+      strcat(route,"\0");
+      }
+      free(petition);
+    }
+    memset(buff,0,200);
   }
 
- if(write(clientfd,resp,strlen(resp))<0)
- {
-    printf("error enviando respuesta\n");
- }
+  char* content;
+  if(def)
+  {
+  content = get_info(__dirname,clientfd);
+  }else{
+   content = get_info(route,clientfd);
+   free(route);
+  }
+  char* resp;
+  if(size<0)
+  {
+    printf("error leyendo del cliente\n");
+  }
   close(clientfd);
 }
 
-int main()
-{
 
-  ThreadPool* tp = create(3);
+
+
+int main(int argc,char** args)
+{
+  __dirname=dirname();
+  init_files_mutex();
+
+  ThreadPool* tp = create(4);
 
   init(tp);
 

@@ -29,5 +29,6 @@ void *worker_f(void* wk)
      }
    }
   printf("\n matando hilo %d\n",((Worker*)wk)->worker_id);
+  return 0;
 }
 #endif
