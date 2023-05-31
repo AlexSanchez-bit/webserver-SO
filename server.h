@@ -76,6 +76,7 @@ int wait_client(int sockfd)
     return -1;
   }
 
+
   return clientfd;//devuelve el file descriptor del cliente
 }
 

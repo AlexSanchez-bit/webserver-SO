@@ -5,6 +5,8 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <time.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 #include <langinfo.h>
 #include "generate.h"
 
@@ -30,7 +32,7 @@ char* get_info(char* route,int clientfd)//envia la informacion del directorio al
 
         DIR* dir = opendir(route);//abre el directorio
         struct stat buff;//buffer para ver la informacion
-        char* header="HTTP/1.1 %d OK\r\n\r\n %s \r\n\r\n";//cabecera http
+        char* header="HTTP/1.1 %d OK\r\n Content-Type: text/html \r\n %s \r\n\r\n";//cabecera http
         if(!dir)//si no es un directorio
         {
           if(send_file(route,clientfd)>0)//si es un archivo lo envia
@@ -41,7 +43,7 @@ char* get_info(char* route,int clientfd)//envia la informacion del directorio al
           int size=strlen(header)+strlen(file)+3;
           char * resp=malloc(size);
           sprintf(resp,header,404,file);
-          write(clientfd,resp,size);
+          send(clientfd,resp, strlen(resp), 0);//envio la cabecera
           free(resp);
           free(file);
           return NULL;
@@ -50,7 +52,7 @@ char* get_info(char* route,int clientfd)//envia la informacion del directorio al
 
         char* resp = malloc(strlen(header));
           sprintf(resp,header,200,"");
-          write(clientfd,resp,strlen(resp));//envia la cabecera con status 200
+          send(clientfd,resp, strlen(resp), 0);//envio la cabecera con status 200
 
         
           char* template_ = fill_content("./plantilla.html",NULL,0);            
@@ -60,7 +62,7 @@ char* get_info(char* route,int clientfd)//envia la informacion del directorio al
           char* token = strtok(ret,"$");//lo divido 
           free(template_);//limpio la memoria
 
-          write(clientfd,token,strlen(token));//envio la mitad del html
+          send(clientfd,token, strlen(token), 0);     //envio la mitad del html
           token=strtok(NULL,"$");
 
           struct dirent* ent=readdir(dir); //leee las propiedades del directorio     
@@ -95,7 +97,7 @@ char* get_info(char* route,int clientfd)//envia la informacion del directorio al
              snprintf(tmp_,tmp_size,tmp,direction,ent->d_name,date,size);
               
              //escribo la informacion (html) al cliente
-              write(clientfd,tmp_,strlen(tmp_));
+              send(clientfd,tmp_, strlen(tmp_), 0);     //envio la mitad del html
              //limpio la memoria 
              free(tmp);
              free(tmp_);
@@ -106,7 +108,7 @@ char* get_info(char* route,int clientfd)//envia la informacion del directorio al
             ent=readdir(dir);
         }        
         //escribo la otra mitad del html (el final)
-         write(clientfd,token,strlen(token));
+          send(clientfd,token, strlen(token), 0);
           free(ret);
           free(dir);
 
@@ -128,15 +130,15 @@ int send_file(char* route_tofile,int cfd)//enviar archivo al cliente
   {
     return -1;
   }
-  char* header="HTTP/1.1 200  \r\n\r\n  \r\n\r\n";//cabecera para enviar
-  write(cfd,header,strlen(header));//envio la cabecera
+  char* header="HTTP/1.1 200  \r\n Content-Type: raw  \r\n\r\n";//cabecera para enviar
+  send(cfd, header, strlen(header), 0);//envio la cabecera
   char buff[100];//buffer de lectura/escritura
   memset(buff,0,100);//limpio el buffer
   int size=0;
 
   while((size=read(file,&buff,100))>0)//minetras lea algo
   {
-    write(cfd,&buff,size);//esribo lo que lei al cliente (100bytes)
+    send(cfd, buff, size, 0);//envio la cabecera
     memset(buff,0,100);//limpio el buffer
   }
   close(file);//cierro el archivo
@@ -151,7 +153,7 @@ char* size_to_str(int bytes)//transforma un entero con la cantidad de bytes en u
   memset(ret_value,0,20);
   if(bytes<1024)
   {
-    sprintf(ret_value,"%dB\0",bytes); 
+    sprintf(ret_value,"%dB",bytes); 
     return ret_value;
   }
  
