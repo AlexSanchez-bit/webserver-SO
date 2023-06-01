@@ -2,11 +2,14 @@
 #include "server.h"
 #include "thread_pool.h"
 #include "getroute.h"
+#include <signal.h>
 
 #define PORT 8080  //puerto de la conexion
 #define SERV_ADRR "127.0.0.1" //ip
 
 
+ int server_socket;
+ ThreadPool* tp;
 
 void *response(void* param) //metodo para responder las peticiones
 {
@@ -84,8 +87,12 @@ void *response(void* param) //metodo para responder las peticiones
 
 
 
-
-
+void sign_handler(int sign_num)
+{
+  finish(tp);//limpia el thread pool
+  close(server_socket);//cierra la conexion  
+     signal(SIGINT,SIG_DFL);
+}
 
 int main(int argc,char** args)
 {
@@ -100,13 +107,16 @@ int main(int argc,char** args)
 
   init_files_mutex();//crea un mutex (para que no de bateo los hilos)
 
-  ThreadPool* tp = create(4);//crea un thread pool con 4 hilos
+   tp = create(4);//crea un thread pool con 4 hilos
 
   init(tp);//inicializa el thread pool
 
-  int socket = create_conection(SERV_ADRR,PORT);//crea la conexion
+
+  signal(SIGINT,sign_handler); //para manejar las senales
+
+  server_socket = create_conection(SERV_ADRR,PORT);//crea la conexion
   
-  if(socket<0)
+  if(server_socket<0)
   {
     printf("error al abrir el servidor\n");
   }else{
@@ -115,11 +125,11 @@ int main(int argc,char** args)
   }
 
   while(1){
-  int client_fd = wait_client(socket);  //forever espera a q un usuario haga un request
+  int client_fd = wait_client(server_socket);  //forever espera a q un usuario haga un request
   send_job(tp,response,client_fd);//manda a responder al thread pool
   }
   finish(tp);//limpia el thread pool
-  close(socket);//cierra la conexion  
+  close(server_socket);//cierra la conexion  
   return 0;
 }
 
