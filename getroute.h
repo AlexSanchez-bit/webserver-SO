@@ -132,14 +132,14 @@ int send_file(char* route_tofile,int cfd)//enviar archivo al cliente
   }
   char* header="HTTP/1.1 200  \r\n Content-Type: raw  \r\n\r\n";//cabecera para enviar
   send(cfd, header, strlen(header), 0);//envio la cabecera
-  char buff[100];//buffer de lectura/escritura
-  memset(buff,0,100);//limpio el buffer
+  char buff[2040];//buffer de lectura/escritura
+  memset(buff,0,2040);//limpio el buffer
   int size=0;
 
-  while((size=read(file,&buff,100))>0)//minetras lea algo
+  while((size=read(file,&buff,2040))>0)//minetras lea algo
   {
     send(cfd, buff, size, 0);//envio la cabecera
-    memset(buff,0,100);//limpio el buffer
+    memset(buff,0,2040);//limpio el buffer
   }
   close(file);//cierro el archivo
   return file;
