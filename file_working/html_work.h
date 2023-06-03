@@ -1,71 +1,54 @@
-#ifndef GETR_H
-#define GETR_H
-#include "header.h"
-#include <unistd.h>
+#include "read_templates.h"
+#include "send_file.h"
 #include <sys/stat.h>
 #include <dirent.h>
 #include <time.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <langinfo.h>
-#include "generate.h"
+#ifndef HWORKING_H
+#define HWORKING_H
 
 char* size_to_str(int bytes);
-int is_file(char* route_tofile);
-int send_file(char* route_tofile,int);
 
-char* __dirname;//variable con el directorio base
-
-
-char* dirname()//devuelve el directorio donde se ejecuto el programa
+void send_html(char*route ,int clientfd )
 {
-     char wcd[1024];//working directory
-     memset(wcd,0,1024);
-     getcwd(wcd,1024);//ruta desde donde se llamo la shell
-     char* ret_val = malloc(strlen(&wcd[0]));
-     ret_val=strcpy(ret_val,&wcd[0]);
-     return ret_val;
-}
-
-char* get_info(char* route,int clientfd)//envia la informacion del directorio al cliente
-{         
-
         DIR* dir = opendir(route);//abre el directorio
-        struct stat buff;//buffer para ver la informacion
-        char* header="HTTP/1.1 %d OK\r\n Content-Type: text/html \r\n %s \r\n\r\n";//cabecera http
+        char* header="HTTP/1.1 %d OK\r\n Content-Type: text/html \r\n\r\n\r\n %s \r\n\r\n";//cabecera http
         if(!dir)//si no es un directorio
         {
           if(send_file(route,clientfd)>0)//si es un archivo lo envia
           {
-            return NULL;
+            return ;
           }
-          char * file = fill_content("./error_page.html",NULL,0);//si no devuelve una pagina de error
+          char * file = read_file("./templates/error_page.html");//si no devuelve una pagina de error
           int size=strlen(header)+strlen(file)+3;
           char * resp=malloc(size);
           sprintf(resp,header,404,file);
           send(clientfd,resp, strlen(resp), 0);//envio la cabecera
           free(resp);
-          free(file);
-          return NULL;
+          free(file);          
+          return;
         }
-
-
-        char* resp = malloc(strlen(header));
-          sprintf(resp,header,200,"");
-          send(clientfd,resp, strlen(resp), 0);//envio la cabecera con status 200
-
+   
+        struct stat buff;//buffer para ver la informacion
         
-          char* template_ = fill_content("./plantilla.html",NULL,0);            
-          char* ret = malloc(strlen(template_)+strlen(route)+4);
+          char* template_ = read_file("./templates/plantilla.html");            
+          char* ret = malloc(strlen(template_)+strlen(route));
+
           sprintf(ret,template_,route,"$");//crea el htmp y el $ es para dividirlo a la mitad
-
+                                           //
           char* token = strtok(ret,"$");//lo divido 
-          free(template_);//limpio la memoria
+                                        //
+        char* resp = malloc(strlen(header)+strlen(token)+10);
+         sprintf(resp,header,200,token);
 
-          send(clientfd,token, strlen(token), 0);     //envio la mitad del html
+          send(clientfd,resp, strlen(resp), 0);//envio la mitad del html
+
           token=strtok(NULL,"$");
-
-          struct dirent* ent=readdir(dir); //leee las propiedades del directorio     
+         
+          free(template_);
+          struct dirent* ent=readdir(dir); //leee las propiedades del directorio 
 
         while(ent!=NULL)//minetras haya cosas que leer
         {
@@ -74,7 +57,12 @@ char* get_info(char* route,int clientfd)//envia la informacion del directorio al
 
             int str_size=strlen(route)+strlen(ent->d_name)+2;
             char* direction=malloc(str_size);
+            if(*(route+strlen(route)-1)=='/')
+            {
+            snprintf(direction,str_size,"%s%s",route,ent->d_name);
+            }else{
             snprintf(direction,str_size,"%s/%s",route,ent->d_name);//guardo la ruta al archivo/directorio
+            }
             
             //stat lee la informacion relevante del archivo (tamano fecha etc)
             stat(direction,&buff);
@@ -91,7 +79,7 @@ char* get_info(char* route,int clientfd)//envia la informacion del directorio al
 
              //leo la plantilla de los elementos de la tabla
              //y guardo el nombre direccion etc 
-             char* tmp = fill_content("./plantilla_content.html",NULL,0);            
+             char* tmp = read_file("./templates/plantilla_content.html");            
              int tmp_size=strlen(tmp)+strlen(ent->d_name)+strlen(date)+strlen(size)+strlen(direction);
              char* tmp_ = malloc(tmp_size);
              snprintf(tmp_,tmp_size,tmp,direction,ent->d_name,date,size);
@@ -107,44 +95,11 @@ char* get_info(char* route,int clientfd)//envia la informacion del directorio al
             }
             ent=readdir(dir);
         }        
+              closedir(dir);
         //escribo la otra mitad del html (el final)
-          send(clientfd,token, strlen(token), 0);
-          free(ret);
-          free(dir);
-
-        return ret;
+                                        //
+          send(clientfd,token, strlen(token), 0);//envio la mitad del html
 }
-
-
-int is_file(char* route_tofile)//para verificar si es un archivo
-{
-  int file = open(route_tofile,O_RDONLY);
-  close(file);
-  return file;
-}
-
-int send_file(char* route_tofile,int cfd)//enviar archivo al cliente
-{
-  int file = open(route_tofile,O_RDONLY);//abro el archivo en lectura
-  if(file==-1)
-  {
-    return -1;
-  }
-  char* header="HTTP/1.1 200  \r\n Content-Type: raw  \r\n\r\n";//cabecera para enviar
-  send(cfd, header, strlen(header), 0);//envio la cabecera
-  char buff[2040];//buffer de lectura/escritura
-  memset(buff,0,2040);//limpio el buffer
-  int size=0;
-
-  while((size=read(file,&buff,2040))>0)//minetras lea algo
-  {
-    send(cfd, buff, size, 0);//envio la cabecera
-    memset(buff,0,2040);//limpio el buffer
-  }
-  close(file);//cierro el archivo
-  return file;
-}
-
 
 char* size_to_str(int bytes)//transforma un entero con la cantidad de bytes en un string con 
                             //bytes mb kb gb etc
@@ -175,5 +130,4 @@ char* size_to_str(int bytes)//transforma un entero con la cantidad de bytes en u
     return ret_value;
 }
 
-
-#endif // !DEBUG
+#endif

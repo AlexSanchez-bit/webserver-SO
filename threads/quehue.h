@@ -2,7 +2,7 @@
 #define QUEUE_H
 #include "message.h"
 
-typedef struct queue
+typedef struct queue//una cola 
 {
    Message* msg; 
    struct queue* next;

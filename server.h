@@ -1,6 +1,3 @@
-#include "header.h"
-#include "getroute.h"
-#include "thread_pool.h"
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <sys/select.h>
@@ -8,8 +5,9 @@
 #include <netdb.h>
 #include <netinet/in.h>
 
-#define  BUFF_SIZE 4098 //tamano del buffer a leer
-#define BACKLOG 5  //cantidad de clientes a atender
+#define  BUFF_SIZE 200 //tamano del buffer a leer
+                        //
+#define BACKLOG 10  //cantidad de clientes a atender
 
 #ifndef SERVER_H
 #define SERVER_H
