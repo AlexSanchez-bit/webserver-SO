@@ -44,11 +44,15 @@ char* get_route(int cfd)
           break;
         }
 
-        if(*(aux+i)=='%' && strncmp(aux+i,"%20",3)==0)//los espacios en http se representan %20
+        if(*(aux+i)=='%')//para manelar caracteres raros
         {
-          i+=3;//corro 3 caracteres
-        route=realloc(route,size+1);//reservo mas memoria
-        *(route+size)=' ';//agrego el espacio
+                  route=realloc(route,size+1);//reservo mas memoria
+                 if(strncmp(aux+i,"%20",3)==0)//los espacios en http se representan %20
+                 {
+                    i+=3;//corro 3 caracteres
+                  *(route+size)=' ';//agrego el espacio
+                 }
+
         size++;//actualizo el tamanno
         }
 

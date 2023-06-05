@@ -6,7 +6,7 @@
 #include "global.h"
 
 #define SERV_ADRR "127.0.0.1"
-#define PORT 8081
+#define PORT 8080
 
 
 

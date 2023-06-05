@@ -3,6 +3,7 @@
 #include "RC.h"
 #ifndef SEND_FILE_H
 #define SEND_FILE_H
+#define SEND_SIZE 200
 
 RC* list;
 int size=0;
@@ -29,14 +30,14 @@ int send_file(char *route_to_file,int cfd)
 
     char* header="HTTP/1.1 200  \r\n Content-Type: raw  \r\n\r\n";//cabecera para enviar
   send(cfd, header, strlen(header), 0);//envio la cabecera
-  char buff[2040];//buffer de lectura/escritura
-  memset(buff,0,2040);//limpio el buffer
+  char buff[SEND_SIZE];//buffer de lectura/escritura
+  memset(buff,0,SEND_SIZE);//limpio el buffer
   int size=0;
 
-  while((size=read(file,&buff,2040))>0)//minetras lea algo
+  while((size=read(file,&buff,SEND_SIZE))>0)//minetras lea algo
   {
-    send(cfd, buff, size, 0);//envio la cabecera
-    memset(buff,0,2040);//limpio el buffer
+    send(cfd, buff, size, 0);//envio los bytes
+    memset(buff,0,SEND_SIZE);//limpio el buffer
   }  
 
 
