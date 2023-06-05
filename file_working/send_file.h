@@ -1,15 +1,22 @@
 #include "../header.h"
+#include <signal.h>
 #include "read_templates.h"
 #include "RC.h"
 #ifndef SEND_FILE_H
 #define SEND_FILE_H
 #define SEND_SIZE 200
 
+void sigpipe_hand(int sig)
+{
+  printf("conexion cerrada por el usuario\n");
+}
+
 RC* list;
 int size=0;
 
 int send_file(char *route_to_file,int cfd)
 {  
+  signal(SIGPIPE,sigpipe_hand); //para manejar los pipes rotos
   int openned=0;
   int file;
   pthread_mutex_lock(&filemutex);//para que no de lio con los hilos
