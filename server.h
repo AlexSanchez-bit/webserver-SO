@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <fcntl.h>
 
 #define  BUFF_SIZE 200 //tamano del buffer a leer
                         //
@@ -22,7 +23,7 @@ int create_conection(char* SERV_ADRR,int PORT)
 
   struct sockaddr_in server;// el tipo de dato para la info del server
   sockfd=socket(AF_INET,SOCK_STREAM,0);//crea el socket con http stream
-
+  
   if(sockfd==-1)
   {
     printf("error creando el socket\n");
@@ -74,6 +75,9 @@ int wait_client(int sockfd)
     return -1;
   }
 
+  int flags = fcntl(clientfd,F_GETFL,0);
+  flags |=O_NONBLOCK;
+  fcntl(clientfd,F_SETFL,flags);
 
   return clientfd;//devuelve el file descriptor del cliente
 }

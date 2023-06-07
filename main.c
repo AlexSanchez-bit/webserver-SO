@@ -5,8 +5,10 @@
 #include <signal.h>
 #include "global.h"
 
+
+
 #define SERV_ADRR "127.0.0.1"
-#define PORT 8080
+#define PORT 8081
 
 
 
@@ -17,7 +19,6 @@ int end=0;
 void sign_handler(int sign_num)
 {
      finish(tp);  
-     free(tp);
      close(socketfd);
      end=1;
      signal(SIGINT,SIG_DFL);
@@ -30,6 +31,7 @@ int main(int argc ,char** args)
 
 
   init_files_mutex();
+  initHandlerMutex();
 //asignar directorios
 char wcd[1024];//working directory
  memset(wcd,0,1024);
@@ -47,8 +49,10 @@ default_dir=*(args+1);
 
 
   signal(SIGINT,sign_handler); //para manejar las senales
+  signal(SIGPIPE,SIG_IGN); //para manejar los pipes rotos
 
-  tp = create(4);
+
+  tp = create(5);
   init(tp);
 
   socketfd = create_conection(SERV_ADRR,PORT);
@@ -61,6 +65,7 @@ default_dir=*(args+1);
 
    while(!end){
     int clientfd = wait_client(socketfd);
+    if(clientfd<0)continue;
     send_job(tp,handle_conection,clientfd);//manda a responder al thread pool
    }  
 

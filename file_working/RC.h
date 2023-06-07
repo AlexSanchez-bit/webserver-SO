@@ -76,4 +76,50 @@ int save_fd(RC** list ,int* size ,int fd,char* filename)//guardar una referencia
   return 1;
 }
 
+int containscfd(RC* list,int size,int fd)//para saber si ya esta guardada
+{
+  if(size==0)
+  {
+    return -1;
+  }else{
+    for(int i=0;i<size;i++)
+    {
+       if((list+i)->fd==fd)
+       {
+        if((list+i)->cantidad==0)
+        {
+          return -1;
+        }
+         return i;
+       }
+    }
+    return -1;
+  }
+
+}
+
+void save_client_fd(RC** list,int fd,int* size)
+{
+  if(*size==0)
+  {
+    *size=1;
+    *(list)=(RC*)malloc(sizeof(RC));
+     RC save = create_rc("/",fd,1);
+    **list=save;
+    return;
+  }
+
+  int pos=containscfd(*list,*size,fd);
+  if(pos==-1)
+  {
+    RC save = create_rc("/",fd,1);   
+    *list=(RC*)realloc(*list,sizeof(RC)*((*size)+1));
+    *(*list+(*size))=save;
+    *size=((*size)+1);
+  }else{
+    (*(list+pos))->cantidad++;   
+  }
+    
+}
+
 #endif

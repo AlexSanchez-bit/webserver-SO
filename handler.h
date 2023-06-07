@@ -1,30 +1,53 @@
 #include "global.h"
 #include "file_working/html_work.h"
+#include "file_working/RC.h"
+#include<pthread.h>
 #ifndef HANDLER_H
 #define HANDLER_H
 
 //seccion donde se manejan las peticiones http
+RC* list; 
+int list_size=0;
+
+pthread_mutex_t client_mutex;
+
+                               //
+void initHandlerMutex()
+{
+  pthread_mutex_init(&client_mutex,NULL);
+}
 
 char* get_route(int cfd);//metodod que devuelve la ruta pedida por el navegador
 
 void *handle_conection(void* cfd)//metodo que se ejecutara en los hilos
 {
   int clientfd = *((int*)cfd); //obtengo el file descriptor del cliente
+  int fdpos=0;                                                                       
   char* route = get_route(clientfd); //obtengo la ruta
-  send_html(route , clientfd );//envio el html
-  close(clientfd);//cierro la conexion con el cliente
+   while(route!=NULL){                                     
+     if(strcmp(route,"null")!=0){
+       printf("%s\n",route);
+    send_html(route,clientfd );
+     }//envio el html
+    route=get_route(clientfd);
+    }
+    close(clientfd);
+    printf("cerrando %d\n",clientfd);
 }
-
 
 char* get_route(int cfd)
 {
   char buffer[BUFF_SIZE];//buffer de lectura para el stream http
+  memset(&buffer,0,BUFF_SIZE);
   int readed=0;//cantidad de bytes leidos
-  char* route;//ruta a devolver
-  int size=0;
+  char* route="null";//ruta a devolver
+  int size=0;   
 
-  while((readed=read(cfd,&buffer,BUFF_SIZE))>0 && buffer[readed-1]!='\n')//mientras no haya leido toda la entrada
-  {
+  readed=recv(cfd,&buffer,BUFF_SIZE,0);
+
+  if(readed<=0 || buffer[readed-1]=='\0'){return NULL;}//si ocurre esto se finalizo la conexion con el cliente
+                             //
+
     if(strncmp(buffer,"GET",3)==0)//busco una peticion GET
     {
       char *aux = &buffer[4];//auxiliar me sirve para obtener los caracteres a leer
@@ -44,7 +67,7 @@ char* get_route(int cfd)
           break;
         }
 
-        if(*(aux+i)=='%')//para manelar caracteres raros
+        if(*(aux+i)=='%')//para manejar caracteres raros
         {
                   route=realloc(route,size+1);//reservo mas memoria
                  if(strncmp(aux+i,"%20",3)==0)//los espacios en http se representan %20
@@ -68,7 +91,6 @@ char* get_route(int cfd)
       }
     }
     memset(&buffer,0,BUFF_SIZE);//limpio el buffer
-  }
 
   if(size==1)//si el tamanno es 1 es porque se pidio "/" 
              //por tanto la ruta es la por defecto

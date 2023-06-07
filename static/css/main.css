@@ -26,3 +26,18 @@ td{
 .show{
   opacity:1;
 }
+
+.centered
+{
+  width:500px;
+  height:500px;
+  position:fixed;
+  top:50%;
+  left:50%;
+  transform: translate(-50%,-50%);
+  margin-top:20px;  
+
+  font-size:54px;  
+
+  text-shadow:10px 10px 10px black;
+}

@@ -24,6 +24,7 @@ void *worker_f(void* wk)//funcion que se ejecutara en cada hilo
     pthread_mutex_unlock(&mymutex);//desbloquea la cola
      if(msg!=NULL){
       if(msg->job!=NULL){
+       printf("tomado en el hilo%d %d\n",((Worker*)wk)->worker_id,msg->param);
        msg->job(&msg->param);// ejecuta el metodo con el parametro enviado
       }
       finish=msg->finish;//revisa que no haya q finalizar
