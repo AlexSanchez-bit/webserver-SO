@@ -6,7 +6,7 @@ body
 h1
 {
   width:100%;
-  font-size:24px;
+  font-size:200%;
   text-align:center;  
 }
 
@@ -40,4 +40,34 @@ td{
   font-size:54px;  
 
   text-shadow:10px 10px 10px black;
+}
+label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: bold;
+  color: #333;
+}
+
+select {
+  padding: 5px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #fff;
+  color: #333;
+  width: 200px;
+}
+
+select:hover {
+  border-color: #999;
+}
+
+select:focus {
+  border-color: #555;
+  outline: none;
+}
+
+option {
+  background-color: #fff;
+  color: #333;
 }
