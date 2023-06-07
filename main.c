@@ -8,7 +8,7 @@
 
 
 #define SERV_ADRR "127.0.0.1"
-#define PORT 8081
+#define PORT 8080
 
 
 
@@ -31,7 +31,6 @@ int main(int argc ,char** args)
 
 
   init_files_mutex();
-  initHandlerMutex();
 //asignar directorios
 char wcd[1024];//working directory
  memset(wcd,0,1024);
@@ -62,6 +61,18 @@ default_dir=*(args+1);
     return -1;
   }
   printf("servidor escuchando en %s:%d\n",SERV_ADRR,PORT);
+
+  char* direction = malloc(strlen(SERV_ADRR)+10);
+  sprintf(direction,"firefox %s:%d",SERV_ADRR,PORT);
+   int ret_val = system(direction);
+
+   if(ret_val>0)
+   {
+    sprintf(direction,"chrome %s:%d",SERV_ADRR,PORT);
+     system(direction);
+   }
+
+  free(direction);
 
    while(!end){
     int clientfd = wait_client(socketfd);

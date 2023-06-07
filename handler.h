@@ -6,16 +6,6 @@
 #define HANDLER_H
 
 //seccion donde se manejan las peticiones http
-RC* list; 
-int list_size=0;
-
-pthread_mutex_t client_mutex;
-
-                               //
-void initHandlerMutex()
-{
-  pthread_mutex_init(&client_mutex,NULL);
-}
 
 char* get_route(int cfd);//metodod que devuelve la ruta pedida por el navegador
 
@@ -26,13 +16,12 @@ void *handle_conection(void* cfd)//metodo que se ejecutara en los hilos
   char* route = get_route(clientfd); //obtengo la ruta
    while(route!=NULL){                                     
      if(strcmp(route,"null")!=0){
-       printf("%s\n",route);
-    send_html(route,clientfd );
+      send_html(route,clientfd );
+      free(route);
      }//envio el html
     route=get_route(clientfd);
     }
     close(clientfd);
-    printf("cerrando %d\n",clientfd);
 }
 
 char* get_route(int cfd)
