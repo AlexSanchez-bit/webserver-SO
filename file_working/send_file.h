@@ -29,7 +29,7 @@ int send_file(char *route_to_file,int cfd)
     return -1;
   }
 
-  char* header="HTTP/1.1 200 OK\r\n Content-Type: raw  \r\n\r\n\r\n";//cabecera para enviar
+  char* header="HTTP/1.1 200 OK\r\n Content-Type: raw  \r\n\r\n";//cabecera para enviar
   send(cfd, header, strlen(header), 0);//envio la cabecera
   char buff[SEND_SIZE];//buffer de lectura/escritura
   memset(buff,0,SEND_SIZE);//limpio el buffer
@@ -47,7 +47,7 @@ int send_file(char *route_to_file,int cfd)
   pthread_mutex_lock(&filemutex);
    drop((list+openned));//limpio el fd 
   pthread_mutex_unlock(&filemutex);
-  return total_size; 
+  return file; 
 }
 
 #endif

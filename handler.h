@@ -45,7 +45,7 @@ char* get_route(int cfd)
 
   readed=recv(cfd,&buffer,BUFF_SIZE,0);
 
-  if(readed<=0 || buffer[readed-1]=='\0'){return NULL;}//si ocurre esto se finalizo la conexion con el cliente
+  if(readed<=0){return NULL;}//si ocurre esto se finalizo la conexion con el cliente
                              //
 
     if(strncmp(buffer,"GET",3)==0)//busco una peticion GET

@@ -14,7 +14,7 @@ char* size_to_str(int bytes);
 void send_html(char*route ,int clientfd )
 {
         DIR* dir = opendir(route);//abre el directorio
-        char* header="HTTP/1.1 %d OK\r\n Content-Type: text/html \r\n\r\n\r\n %s";//cabecera http
+        char* header="HTTP/1.1 %d OK\r\n Content-Type: text/html \r\n\r\n %s";//cabecera http
         if(!dir)//si no es un directorio
         {
           if(send_file(route,clientfd)>0)//si es un archivo lo envia
