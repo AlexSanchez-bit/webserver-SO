@@ -1,6 +1,7 @@
 #include "../header.h"
 #include "read_templates.h"
 #include "RC.h"
+#include <sys/sendfile.h>
 #ifndef SEND_FILE_H
 #define SEND_FILE_H
 #define SEND_SIZE 200
@@ -33,15 +34,11 @@ int send_file(char *route_to_file,int cfd)
   send(cfd, header, strlen(header), 0);//envio la cabecera
   char buff[SEND_SIZE];//buffer de lectura/escritura
   memset(buff,0,SEND_SIZE);//limpio el buffer
-  int size=0;
-  int total_size=0;
-
-  while((size=read(file,&buff,SEND_SIZE))>0)//minetras lea algo
-  {
-    send(cfd, buff, size, 0);//envio los bytes                                 
-    memset(buff,0,SEND_SIZE);//limpio el buffer
-    total_size+=size;                             
-  }  
+  long size=SEND_SIZE;
+  off_t off=0;
+  size_t readed=0;
+  while((readed =sendfile(cfd,file,&off,size))>0){
+  }
 
 
   pthread_mutex_lock(&filemutex);

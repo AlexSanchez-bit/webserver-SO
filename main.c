@@ -8,7 +8,7 @@
 
 
 #define SERV_ADRR "127.0.0.1"
-#define PORT 8080
+#define PORT 8081
 
 
 
@@ -29,7 +29,7 @@ void sign_handler(int sign_num)
 int main(int argc ,char** args)
 {
 
-
+int port=PORT;
   init_files_mutex();
 //asignar directorios
 char wcd[1024];//working directory
@@ -38,12 +38,18 @@ char wcd[1024];//working directory
 __dirname=malloc(strlen(wcd));
 strcpy(__dirname,wcd);
 
-if(argc<=1)
+if(argc>1)
+{
+  char* aux=*(args+1);
+  port=atoi(aux);
+}
+
+if(argc<=2)
 {
   default_dir=__dirname;
 }else
 {
-default_dir=*(args+1);
+default_dir=*(args+2);
 }
 
 
@@ -54,21 +60,21 @@ default_dir=*(args+1);
   tp = create(5);
   init(tp);
 
-  socketfd = create_conection(SERV_ADRR,PORT);
+  socketfd = create_conection(SERV_ADRR,port);
   if(socketfd<0)
   {
-    printf("error al iniciar el servidor puerto %d ocupado\n ",PORT);
+    printf("error al iniciar el servidor puerto %d ocupado\n ",port);
     return -1;
   }
-  printf("servidor escuchando en %s:%d\n",SERV_ADRR,PORT);
+  printf("servidor escuchando en %s:%d\n",SERV_ADRR,port);
 
   char* direction = malloc(strlen(SERV_ADRR)+10);
-  sprintf(direction,"firefox %s:%d",SERV_ADRR,PORT);
+  sprintf(direction,"firefox %s:%d &",SERV_ADRR,port);
    int ret_val = system(direction);
 
    if(ret_val>0)
    {
-    sprintf(direction,"chrome %s:%d",SERV_ADRR,PORT);
+    sprintf(direction,"chrome %s:%d &",SERV_ADRR,port);
      system(direction);
    }
 

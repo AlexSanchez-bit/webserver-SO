@@ -31,15 +31,14 @@ void send_html(char*route ,int clientfd )
           return;
         }
    
-
         struct stat buff;//buffer para ver la informacion
         
           char* template_ = read_file("./templates/plantilla.html");            
-          char* ret = malloc(strlen(template_)+strlen(route)+1);
-          sprintf(ret,template_,route,"$");//crea el htmp y el $ es para dividirlo a la mitad
+          char* ret = malloc(strlen(template_)+strlen(route));
+          sprintf(ret,template_,route,"$");//crea el html y el $ es para dividirlo a la mitad
           char* token = strtok(ret,"$");//lo divido 
-        char* resp = malloc(strlen(header)+strlen(token)+10);
-         sprintf(resp,header,200,token);
+          char* resp = malloc(strlen(header)+strlen(token)+10);
+          sprintf(resp,header,200,token);
 
           send(clientfd,resp, strlen(resp), 0);//envio la mitad del html
 
@@ -52,7 +51,6 @@ void send_html(char*route ,int clientfd )
         {
             if(ent->d_name[0]!='.'){//si no es el mismo directorio (quitar . y .. , se ve feo) 
                
-
             int str_size=strlen(route)+strlen(ent->d_name)+2;
             char* direction=malloc(str_size);
             if(*(route+strlen(route)-1)=='/')
@@ -93,12 +91,13 @@ void send_html(char*route ,int clientfd )
             }
             ent=readdir(dir);
         }        
-              closedir(dir);
+        closedir(dir);
         //escribo la otra mitad del html (el final)
-          send(clientfd,token, strlen(token), 0);//envio la mitad del html
-          free(resp);
-          free(ret);
+        send(clientfd,token, strlen(token), 0);//envio la mitad del html
+        free(resp);
+        free(ret);
 }
+
 char* size_to_str(int bytes)//transforma un entero con la cantidad de bytes en un string con 
                             //bytes mb kb gb etc
 {

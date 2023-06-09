@@ -19,6 +19,8 @@ void *handle_conection(void* cfd)//metodo que se ejecutara en los hilos
       send_html(route,clientfd );
       free(route);
      }//envio el html
+     else{
+     }
     route=get_route(clientfd);
     }
     close(clientfd);

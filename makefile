@@ -4,4 +4,4 @@ build:
 
 .PHONY: dev
 run:
-	gcc main.c -o server.out && ./server.out
+	gcc main.c -o server.out && ./server.out 1234 /home
