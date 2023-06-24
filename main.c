@@ -83,8 +83,7 @@ default_dir=*(args+2);
    while(!end){
     int clientfd = wait_client(socketfd);
     if(clientfd<0)continue;
-    //send_job(tp,handle_conection,clientfd);//manda a responder al thread pool
-    handle_conection(&clientfd);
+    send_job(tp,handle_conection,clientfd);//manda a responder al thread pool
    }  
 
    free(__dirname);
