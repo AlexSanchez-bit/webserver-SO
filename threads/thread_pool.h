@@ -38,36 +38,38 @@ void init(ThreadPool* tp)
 {
   for(int i=0;i<tp->cant_workers;i++)
   {
-    pthread_create ((tp->threads+i) , NULL , worker_f , (tp->workers+i) );//inicializa los hilos con los workers
+   // pthread_create ((tp->threads+i) , NULL , worker_f , (tp->workers+i) );//inicializa los hilos con los workers
   }
 }
 
 void send_job(ThreadPool* tp , func* job,int param)//envia un mensaje a los workers
-{
-    Message a = {false,job,param};
-    Message* pointer = malloc(sizeof(Message));
-    *pointer=a;
-    pthread_mutex_lock(&mymutex);
-    push(tp->cola,pointer);
-    pthread_mutex_unlock(&mymutex);
+{ 
+  pthread_t new_thread;
+  pthread_create (&new_thread , NULL , job , &param );//inicializa los hilos con los workers
+   // Message a = {false,job,param};
+   // Message* pointer = malloc(sizeof(Message));
+   // *pointer=a;
+   // pthread_mutex_lock(&mymutex);
+   // push(tp->cola,pointer);
+   // pthread_mutex_unlock(&mymutex);
 }
 
 void finish(ThreadPool* tp)//termina el thread pool
 {
   
-    Message a = {true,NULL,0};
-  for(int i=0;i<tp->cant_workers+1;i++)
-  {
-    Message* pointer = malloc(sizeof(Message));
-    *pointer=a;
-    pthread_mutex_lock(&mymutex);
-    push(tp->cola,pointer);
-    pthread_mutex_unlock(&mymutex);
-  }
+ //   Message a = {true,NULL,0};
+ // for(int i=0;i<tp->cant_workers+1;i++)
+ // {
+ //   Message* pointer = malloc(sizeof(Message));
+ //   *pointer=a;
+ //   pthread_mutex_lock(&mymutex);
+ //   push(tp->cola,pointer);
+ //   pthread_mutex_unlock(&mymutex);
+ // }
 
-  for(int i=0;i<tp->cant_workers;i++)
-  {
-    pthread_join ( *(tp->threads+i) , NULL ) ;
-  }
+ // for(int i=0;i<tp->cant_workers;i++)
+ // {
+ //   pthread_join ( *(tp->threads+i) , NULL ) ;
+ // }
 }
 #endif

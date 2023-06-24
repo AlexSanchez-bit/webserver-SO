@@ -6,7 +6,7 @@
 #include <netinet/in.h>
 #include <fcntl.h>
 
-#define  BUFF_SIZE 200 //tamano del buffer a leer
+#define  BUFF_SIZE 1024 //tamano del buffer a leer
                         //
 #define BACKLOG 10  //cantidad de clientes a atender
 
@@ -75,9 +75,9 @@ int wait_client(int sockfd)
     return -1;
   }
 
-  int flags = fcntl(clientfd,F_GETFL,0);
-  flags |=O_NONBLOCK;
-  fcntl(clientfd,F_SETFL,flags);
+//  int flags = fcntl(clientfd,F_GETFL,0);
+//  flags |=O_NONBLOCK;
+//  fcntl(clientfd,F_SETFL,flags);
 
   return clientfd;//devuelve el file descriptor del cliente
 }

@@ -18,6 +18,7 @@ void *handle_conection(void* cfd)//metodo que se ejecutara en los hilos
      if(strcmp(route,"null")!=0){
       send_html(route,clientfd );
       free(route);
+      break;
      }//envio el html
      else{
      }
@@ -36,7 +37,7 @@ char* get_route(int cfd)
 
   readed=recv(cfd,&buffer,BUFF_SIZE,0);
 
-  if(readed<=0){return NULL;}//si ocurre esto se finalizo la conexion con el cliente
+  if(readed<=0){return NULL;}//si ocurre esto se finalizo la conexion con el cliente o si hubo un error
                              //
 
     if(strncmp(buffer,"GET",3)==0)//busco una peticion GET
